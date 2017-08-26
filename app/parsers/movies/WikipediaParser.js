@@ -6,7 +6,7 @@ var request = require('request');
 var obj = JSON.parse(fs.readFileSync('../../guide.json', 'utf8'))
 console.log("oi")
 
-function extractGenre(body) {
+function extractGenrePt(body) {
     // TODO: Pode ser género
     const $ = cheerio.load(body);
     return $('td:contains("Gênero")').next().children('a').map(function(i, node) {
@@ -14,8 +14,11 @@ function extractGenre(body) {
 });
 }
 
-function extractStarring(body) {
-
+function extractStarringPt(body) {
+    const $ = cheerio.load(body);
+    return $('td:contains("Elenco")').next().children('a').map(function(i, node) {
+        return $(node).text();
+});
 }
 
 function getWikipediaCleanerHtml(title) {
@@ -25,10 +28,21 @@ function getWikipediaCleanerHtml(title) {
                 json: true,
                 encoding: 'utf-8'}, function (error, response, body) {
                 if(!error && response.statusCode == '200') {
-                    let genre = extractGenre(body);
+                    let objRet = {};
+                    let genre = extractGenrePt(body);
                     if (genre != null && genre.length != 0) {
-                        console.log("o gênero de " + reqUrl + "é : " + genre.toArray().toString());
+                        // console.log("o gênero de " + title + "é : " + genre.toArray().toString());
+                        objRet.genre = genre.toArray();
                     }
+                    let starring = extractStarringPt(body);
+                    if (starring != null && starring.length != 0) {
+                        // console.log("o elenco de " + title + "é : " + starring.toArray().toString());
+                        objRet.starring = starring.toArray();
+                    }
+                    objRet.title = title;
+                    objRet.source = 'wikipedia';
+                    console.log(objRet)
+                    pushToDB(objRet);
                 }
                 else {
                 }
@@ -37,15 +51,21 @@ function getWikipediaCleanerHtml(title) {
 
 }
 
-obj.hits.forEach(function(element) {
-    let titulo = element._source.programTitle;
+function pushToDB(objRet) {
+    endPoint = "http://thecallbacks.ddns.net:8080/hack/data";
+    request.post({uri: endPoint,
+                  json: objRet}, function(err, resp) {
+    console.log(err, resp.body)
+}
+);
+}
+
+function scrape(titulo) {
     reqUrl = "https://pt.wikipedia.org/w/api.php?action=opensearch&search=" + titulo + "&limit=5&namespace=0&format=json";
     request.get({uri: reqUrl,
                 json: true,
                 encoding: 'utf-8'}, function (error, response, body) {
-                //   console.log('error:', error); // Print the error if one occurred
                  if(!error) {
-                    // console.log(body);
                     hasFirstResult = body.length > 0 && body[1].length > 0;
                     if(hasFirstResult) {
                         let title = body[1][0];
@@ -54,5 +74,9 @@ obj.hits.forEach(function(element) {
                     }
                 }
             })
+}
+
+obj.hits.forEach(function(element) {
+    scrape(element._source.programTitle);
 }, this);
 
