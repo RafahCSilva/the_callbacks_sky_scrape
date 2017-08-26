@@ -3,17 +3,26 @@ var rp = require('request-promise')
 const cheerio = require('cheerio')
 const async = require('async')
 
+var DB_URL = 'http://thecallbacks.ddns.net:8080/hack/data/hack/data/'
+
 async function process (query) {
   let searchLink = 'https://filmow.com/buscar/'
-  var propertiesObject = { q: query, movie_type : 'f' }
+  var propertiesObject = { q: query, movie_type : 's' }
 
   let resp = await rp.get({ url: searchLink, qs: propertiesObject })
   let $ = cheerio.load(resp)
 
   let title = $('.search-result-item .title')
 
-  async.map(title, async.asyncify(calculate), function(err, results) {
-    console.log(results)
+  async.map(title, async.asyncify(calculate), async function(err, results) {
+    let payload = {
+      title: query,
+      source: 'filmow',
+      result : results
+    }
+    request.post({url: DB_URL, json: payload}, function (err, resp) {
+      console.log(err, resp.body)
+    })
   });
 
   async function calculate(el) {
@@ -34,7 +43,7 @@ async function process (query) {
 }
 
 (async function execute() {
-  await process('os embalos de sábado a noite')
+  await process('game of thrones')
 })()
 
 
