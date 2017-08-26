@@ -46,23 +46,38 @@ var scrapePage = function (url) {
                         });
                     });
                     
+                    movie.technicalDetails.movieName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
                     movie.technicalDetails.releaseYear = $('#titleYear > a').text();
                     movie.technicalDetails.originalName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
                     movie.technicalDetails.duration = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div.subtext > time').text();
                     movie.technicalDetails.originalLanguage = $('#titleDetails > div:nth-child(5) > a').text();
                     
+                    movie.about.sinposis = $('#titleStoryLine .inline.canwrap p').text();
+                    $('#titleStoryLine > div:nth-child(6) a').each(function (i, elm) {
+                        if ($(elm).text().indexOf('See All') < 0) {
+                            movie.about.keywords.push($(elm).text());
+                        }
+                    });
+                    
+                    $('.title_wrapper .subtext a').each(function (i, elm) {
+                        if ($(elm).attr('href').indexOf('genre') > 0) {
+                            movie.about.genre.push($(elm).find('span').text());
+                        }
+                    });
+                    
                     $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
                         movie.technicalDetails.producers.push($(j).text());
-                    })
+                    });
                     
                     $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(2) > span').find('a > span').each(function (i, elm) {
                         movie.cast.directors = $(elm).text();
                     });
+                    
                     $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(3) > span').find('a > span').each(function (i, elm) {
                         movie.cast.creators.push($(elm).text());
                     });
                     
-                    $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
+                    $('#titleDetails > div:nth-child(11) span[itemprop=creator] a span').each(function (i,j) {
                         movie.cast.production.push($(j).text());
                     });
                     
