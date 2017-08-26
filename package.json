@@ -9,7 +9,8 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "express": "^4.15.4"
+    "express": "^4.15.4",
+    "wiki-infobox": "^0.4.0"
   },
   "repository": {
     "type": "git",
