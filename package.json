@@ -2,12 +2,13 @@
   "name": "callbacks",
   "version": "1.0.0",
   "description": "The Callbacks",
-  "main": "src/index.js",
+  "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
     "express": "^4.15.4"
   },
   "repository": {
