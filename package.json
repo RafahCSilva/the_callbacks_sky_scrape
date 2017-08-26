@@ -21,5 +21,11 @@
   "bugs": {
     "url": "https://github.com/RafahCSilva/the_callbacks_sky_scrape/issues"
   },
-  "homepage": "https://github.com/RafahCSilva/the_callbacks_sky_scrape#readme"
+  "homepage": "https://github.com/RafahCSilva/the_callbacks_sky_scrape#readme",
+  "devDependencies": {
+    "async": "^2.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1"
+  }
 }
