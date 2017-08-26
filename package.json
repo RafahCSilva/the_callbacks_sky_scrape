@@ -1,0 +1,23 @@
+{
+  "name": "callbacks",
+  "version": "1.0.0",
+  "description": "The Callbacks",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.15.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RafahCSilva/the_callbacks_sky_scrape.git"
+  },
+  "author": "TheCallbacks",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RafahCSilva/the_callbacks_sky_scrape/issues"
+  },
+  "homepage": "https://github.com/RafahCSilva/the_callbacks_sky_scrape#readme"
+}
