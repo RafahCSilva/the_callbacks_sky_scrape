@@ -8,8 +8,8 @@ module.exports = {
         parentalRating: "",
         universe: "",
         originalLanguage: "",
-        synonyms: [""],
-        availableLanguages: [""],
+        synonyms: [],
+        availableLanguages: [],
         totalSeasons: "",
         totalEpisodes: "", 
         soundtrack: [{
@@ -18,66 +18,28 @@ module.exports = {
             lengthInSeconds: 0
         }],
         basedOnBook: "",
-        producers: [""],
+        producers: [],
         status: ""
     },
     about: {
         rating: "", 
         sinposis: "",
-        keywords: [""],
-        genre: [""],
-        theme: [""]
+        keywords: [],
+        genre: [],
+        theme: []
     },
     
     media: {
         logo: "",
         poster: "",
-        trailers: [""],
-        promoVideos: [""],
-        backdropImages: [""],
-        promoImages: [""],
-        screenshots: [""]
+        trailers: [],
+        promoVideos: [],
+        backdropImages: [],
+        promoImages: [],
+        screenshots: []
     },
     
-    seasons:[{
-        number: "",
-        year: "",
-        totalEpisodes: "",
-        
-        media: {
-            poster: "",
-            trailers: [""],
-            promoVideos: [""],
-            backdropImages: [""],
-            promoImages: [""],
-            screenshots: [""]
-        
-        },
-        
-        cast: {
-            director: [""],
-            creator: [""],
-            production: [""],
-            script: [""],
-            list: [{
-                name: "",
-                sex: "",
-                character: "",
-                voiceActor: ""
-            }]
-    },
-        
-        episodes: [{
-            name: "",
-            number: "", 
-            director: "", 
-            creator: "",
-            sinposis: "", 
-            screenshots: [""]
-            
-        }] 
-        
-    }],
+    seasons:[],
     
     sky: {
         schedule: [{
