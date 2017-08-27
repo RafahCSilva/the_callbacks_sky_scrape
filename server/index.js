@@ -32,7 +32,7 @@ app.post('/processOne',  async (req, res, next) => {
   let releaseDate = req.body._source.releaseYear
 
   filmow(title).then();
-  //imdbParser.scrape(title).then();
+  imdbParser.scrape(title);
   
   res.json({test: 'felipe'});
 });
