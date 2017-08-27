@@ -1,4 +1,5 @@
 module.exports = {
+    _type: 'serie',
     technicalDetails: {
         movieName: "",
         releaseYear: "",
@@ -55,8 +56,8 @@ module.exports = {
         },
 
         cast: {
-            director: [],
-            creator: [],
+            directors: [],
+            creators: [],
             production: [],
             script: [],
             list: [{
