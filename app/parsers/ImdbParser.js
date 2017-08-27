@@ -15,14 +15,14 @@ module.exports.scrape = function (title) {
                 if ($list(elm).find('.result_text a').text() == title && found == false) {
                     found = true;
                     let url = 'http://www.imdb.com' + $list(elm).find('.result_text a').attr('href').split('/?ref')[0];
-                    scrapePage(url);
+                    scrapePage(url, title);
                 }
             });
         }
     });
 }
 
-var scrapePage = function (url) {
+var scrapePage = function (url, query) {
     request(url, function (error, response, html) {
         if (!error && response.statusCode == 200) {
             const $ = cheerio.load(html);
@@ -84,7 +84,11 @@ var scrapePage = function (url) {
                     //TODO change for image base64
                     movie.media.poster = $('#title-overview-widget > div.vital > div.slate_wrapper > div.poster > a > img').attr('src');
                     
-                    console.log(movie);
+                    return {
+                        title: query,
+                        source: 'IMDB',
+                        result : movie
+                    }
                 });
             }
             
