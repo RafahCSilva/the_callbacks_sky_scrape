@@ -1,4 +1,6 @@
-function TwitterParser(pesquisa) {
+let Commmitter = require('../lib/committer')
+
+function twitterParser(pesquisa) {
     return new Promise(function (resolve, reject) {
         let Twitter = require('twitter');
 
@@ -27,10 +29,17 @@ function TwitterParser(pesquisa) {
                         text: el.text
                     });
                 });
+                let committer = new Commmitter();
+
+                committer.post({
+                    title: 'pesquisa',
+                    source: 'twitter',
+                    result: tweetas
+                })
                 resolve(tweetas);
             }
         });
     });
 }
 
-module.exports = TwitterParser;
+module.exports = twitterParser;
