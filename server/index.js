@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const imdbParser = require('./../app/parsers/ImdbParser');
 var bodyParser = require('body-parser')
+const Committer = require('../app/lib/committer')
 
 const filmow = require('../app/lib/filmow')
 
@@ -29,10 +30,24 @@ app.post('/processOne',  async (req, res, next) => {
   let title = req.body._source.programTitle
   let releaseDate = req.body._source.releaseYear
 
-  filmow(title);
-  imdbParser.scrape(title);
+  filmow(title).then(resp => console.log(resp));
+  imdbParser.scrape(title).then(resp => console.log(resp));
   
   res.json({test: 'felipe'});
+});
+
+app.get('/obtainData',  async (req, res, next) => {
+  if(req.query == null) {
+    sendJsonResponse(res , 400, {error: 'Body not found'})
+  }
+
+  // this assumes the sky strucutre
+  let title = req.query.title
+
+  let committer = new Committer()
+  let resp = await committer.getByTitle(title)
+
+  sendJsonResponse(res, 200, { result : resp })
 });
 
 app.listen(app.get('port'), function () {
