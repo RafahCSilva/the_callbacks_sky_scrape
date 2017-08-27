@@ -22,16 +22,17 @@ var sendJsonResponse = function(res, status, content) {
 };
 
 app.post('/processOne',  async (req, res, next) => {
-  if(req.body == null) {
+  if(req.body == null || req.body._source == null) {
     sendJsonResponse(res , 400, {error: 'Body not found'})
+    return
   }
 
   // this assumes the sky strucutre
   let title = req.body._source.programTitle
   let releaseDate = req.body._source.releaseYear
 
-  filmow(title).then(resp => console.log(resp));
-  imdbParser.scrape(title).then(resp => console.log(resp));
+  filmow(title).then();
+  //imdbParser.scrape(title).then();
   
   res.json({test: 'felipe'});
 });
