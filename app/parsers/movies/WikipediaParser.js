@@ -14,11 +14,27 @@ function extractGenrePt(body) {
 });
 }
 
+function extractDuracaoPt(body) {
+    const $ = cheerio.load(body);
+    return $('td:contains("Duração")').next().text();
+}
+
 function extractStarringPt(body) {
     const $ = cheerio.load(body);
     return $('td:contains("Elenco")').next().children('a').map(function(i, node) {
         return $(node).text();
 });
+}
+
+function extractFormatPtOld(body) {
+    const $ = cheerio.load(body);
+    let format = $('td:contains("Formato")').next().children('a').first().text();
+    let returnFormat = "";
+    if (format != "NTSC" && format != "480i" && format != "1080i" && format != "SDTV"
+        && format != "16:9") {
+        returnFormat = format;
+    }
+    return returnFormat;
 }
 
 function getWikipediaCleanerHtml(title) {
@@ -28,21 +44,40 @@ function getWikipediaCleanerHtml(title) {
                 json: true,
                 encoding: 'utf-8'}, function (error, response, body) {
                 if(!error && response.statusCode == '200') {
-                    let objRet = {};
+                    extractedSomeDataSucessfully = false;
+                    let objRet = {'result': {}};
+
                     let genre = extractGenrePt(body);
                     if (genre != null && genre.length != 0) {
-                        // console.log("o gênero de " + title + "é : " + genre.toArray().toString());
-                        objRet.genre = genre.toArray();
+                        objRet.result.genre = genre.toArray();
+                        extractedSomeDataSucessfully = true;
                     }
+
                     let starring = extractStarringPt(body);
                     if (starring != null && starring.length != 0) {
-                        // console.log("o elenco de " + title + "é : " + starring.toArray().toString());
-                        objRet.starring = starring.toArray();
+                        objRet.result.starring = starring.toArray();
+                        extractedSomeDataSucessfully = true;
                     }
+
+                    let format = extractFormatPtOld(body);
+                    if (format != null && format.length != 0) {
+                        objRet.result.format = format
+                        extractedSomeDataSucessfully = true;
+                    }
+
+                    let duration = extractDuracaoPt(body);
+                    if (duration != null && duration.length != 0) {
+                        parsedDuration = parseDuration(duration);
+                        objRet.result.duration = duration;
+                        extractedSomeDataSucessfully = true;
+                    }
+
                     objRet.title = title;
                     objRet.source = 'wikipedia';
-                    console.log(objRet)
-                    pushToDB(objRet);
+                    if (extractedSomeDataSucessfully) {
+                        // pushToDB(objRet);
+                        console.log()
+                    }
                 }
                 else {
                 }
@@ -61,10 +96,16 @@ function pushToDB(objRet) {
 }
 
 function scrape(titulo) {
-    reqUrl = "https://pt.wikipedia.org/w/api.php?action=opensearch&search=" + titulo + "&limit=5&namespace=0&format=json";
+    let reqUrl = "https://pt.wikipedia.org/w/api.php?action=opensearch&search=" + titulo + "&limit=5&namespace=0&format=json";
     request.get({uri: reqUrl,
                 json: true,
                 encoding: 'utf-8'}, function (error, response, body) {
+                if (error == null) {
+                    console.log("sucesso: " + reqUrl);
+                }
+                else {
+                    console.log("erro: " + reqUrl);
+                }
                  if(!error) {
                     hasFirstResult = body.length > 0 && body[1].length > 0;
                     if(hasFirstResult) {
@@ -80,3 +121,12 @@ obj.hits.forEach(function(element) {
     scrape(element._source.programTitle);
 }, this);
 
+function parseDuration(raw) {
+    let myRegexp = /(\d+) [Mm]in/;
+    let match = myRegexp.exec(raw);
+    retorno = "";
+    if (match != null && match.length > 0) {
+        retorno = match[1];
+    }
+    return retorno;
+}
