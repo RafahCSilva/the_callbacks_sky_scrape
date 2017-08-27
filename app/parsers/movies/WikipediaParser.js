@@ -1,5 +1,7 @@
 const fs = require('fs')
 const cheerio = require('cheerio');
+const movie = require('../../models/movie.js');
+const generico = require('../../models/generico.js');
 
 var request = require('request');
 var rp = require('request-promise');
@@ -70,53 +72,75 @@ async function getWikipediaCleanerHtml(title) {
 }
 
 async function getObject(body, title) {
-    let extractedSomeDataSucessfully = false;
+    let extractedSomeDataSucessfully = 0;
     let objRet = { 'result': {} };
 
     let genre = extractGenrePt(body);
     if (genre != null && genre.length != 0) {
         objRet.result.genre = genre.toArray();
-        extractedSomeDataSucessfully = true;
+        extractedSomeDataSucessfully++;
     }
 
     let starring = extractStarringPt(body);
     if (starring != null && starring.length != 0) {
         objRet.result.starring = starring.toArray();
-        extractedSomeDataSucessfully = true;
+        extractedSomeDataSucessfully++;
     }
 
     let format = extractFormatPtOld(body);
     if (format != null && format.length != 0) {
         objRet.result.format = format
-        extractedSomeDataSucessfully = true;
+        extractedSomeDataSucessfully++;
     }
 
     let idioma = extractIdiomaPt(body);
     if (idioma != null && idioma.length != 0) {
         objRet.result.language = idioma.toArray();
-        extractedSomeDataSucessfully = true;
+        extractedSomeDataSucessfully++;
     }
 
     let duration = extractDuracaoPt(body);
     if (duration != null && duration.length != 0) {
         parsedDuration = parseDuration(duration);
         objRet.result.duration = duration;
-        extractedSomeDataSucessfully = true;
+        extractedSomeDataSucessfully++;
     }
 
     let alternativeNames = await extractAlternativeNames(title);
     if (alternativeNames != null && alternativeNames.length != 0) {
         objRet.result.alternativeNames = alternativeNames;
-        extractedSomeDataSucessfully = true;
+        extractedSomeDataSucessfully++;
     }
 
     objRet.title = title;
     objRet.source = 'wikipedia';
-    if (extractedSomeDataSucessfully) {
-        pushToDB(objRet);
-        return objRet;
+        if (extractedSomeDataSucessfully > 2) {
+            pushToDB(convertToGeneric(objRet));
+            return objRet;
     }
     return null;
+}
+
+function convertToMovie(objRet) {
+    movie.technicalDetails.movieName = objRet.result.title;
+    movie.technicalDetails.duration = objRet.result.duration;
+    movie.technicalDetails.genre = objRet.result.genre;
+    movie.technicalDetails.availableLanguages = objRet.result.language;
+    movie.technicalDetails.duration = objRet.result.duration;
+    movie.about.keywords = objRet.result.alternativeNames;
+    movie.cast.list = objRet.result.starring;
+}
+
+function convertToGeneric(objRet) {
+    generico.technicalDetails.movieName = objRet.title;
+    generico.technicalDetails.duration = objRet.result.duration;
+    generico.technicalDetails.genre = objRet.result.genre;
+    generico.technicalDetails.availableLanguages = objRet.result.language;
+    generico.technicalDetails.duration = objRet.result.duration;
+    generico.about.keywords = objRet.result.alternativeNames;
+    generico.cast.list = objRet.result.starring;
+    generico.type = objRet.result.format;
+    return generico;
 }
 
 function pushToDB(objRet) {
@@ -169,15 +193,15 @@ function getTitle(matches) {
     return firstMatch;
 }
 
-(async function execute() {
-    let obj = JSON.parse(fs.readFileSync('../../guide.json', 'utf8'))
-    console.log("oi")
-    obj.hits.forEach(function (element, i) {
-        if (i < 200) {
-            scrape(element._source.programTitle);
-        }
-    }, this);
-})()
+// (async function execute() {
+//     let obj = JSON.parse(fs.readFileSync('../../guide.json', 'utf8'))
+//    console.log("oi")
+//    obj.hits.forEach(function (element, i) {
+//        if (i < 200) {
+//            scrape(element._source.programTitle);
+//        }
+//    }, this);
+// })()
 
 function parseDuration(raw) {
     let myRegexp = /(\d+) [Mm]in/;
@@ -192,3 +216,5 @@ function parseDuration(raw) {
 function uniq(a) {
     return Array.from(new Set(a));
 }
+
+module.exports = scrape
