@@ -2,6 +2,7 @@ const request = require('request')
 var rp = require('request-promise')
 const cheerio = require('cheerio')
 const async = require('async')
+const Committer = require('./committer')
 
 var DB_URL = 'http://thecallbacks.ddns.net:8080/hack/data/hack/data/'
 
@@ -14,15 +15,19 @@ async function process (query) {
 
   let title = $('.search-result-item .title')
 
+  console.log("Starting process in parallel")
   async.map(title, async.asyncify(calculate), async function(err, results) {
+
+    let committer = new Committer()
     let payload = {
       title: query,
       source: 'filmow',
       result : results
     }
-    request.post({url: DB_URL, json: payload}, function (err, resp) {
-      console.log(err, resp.body)
-    })
+
+    let resp = await committer.post(payload)
+    console.log("Finished execution")
+    console.log(resp)
   });
 
   async function calculate(el) {
@@ -42,10 +47,7 @@ async function process (query) {
   }
 }
 
-(async function execute() {
-  await process('game of thrones')
-})()
-
+module.exports = process
 
 async function getComments(link){
   let commentsLink = 'https://filmow.com/async/comments/'
