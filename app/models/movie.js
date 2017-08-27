@@ -15,6 +15,7 @@ module.exports = {
         producers: []
     },
     about: {
+        rating: '',
         sinopsis: "",
         keywords: [],
         genre: [],
@@ -46,5 +47,6 @@ module.exports = {
         schedules: [],
         channels: [],
         cineSky: "",
-    }
+    },
+    comments: []
 }

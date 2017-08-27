@@ -3,6 +3,7 @@ var rp = require('request-promise')
 const cheerio = require('cheerio')
 const async = require('async')
 const Committer = require('./committer')
+const _ = require('lodash')
 
 var DB_URL = 'http://thecallbacks.ddns.net:8080/hack/data/hack/data/'
 
@@ -39,10 +40,33 @@ async function process (query) {
   let join = await Promise.all(arr)
 
   let commiter = new Committer()
-  commiter.post({
-    title: query,
-    source: 'filmow',
-    result : join
+
+  let final = join.map(function(item) {
+    if(item.type = 'Série') {
+      const serie = _.cloneDeep(require('./../models/serie'))
+      serie.technicalDetails.releaseYear = item.year
+      serie.technicalDetails.movieName = item.title
+      serie.about.rating = item.stars
+      serie.comments = item.comments
+      return serie
+    }
+
+    else {
+      const movie = _.cloneDeep(require('./../models/serie'))
+      movie.technicalDetails.releaseYear = item.year
+      movie.technicalDetails.movieName = item.title
+      movie.about.rating = item.stars
+      movie.comments = item.comments
+      return movie
+    }
+  })
+
+  final.forEach(function(item) {
+    commiter.post({
+      title: query,
+      source: 'filmow',
+      result : item
+    })
   })
 
   return join
@@ -57,6 +81,7 @@ async function process (query) {
     let data = splitText(text)
     data.stars = parallel[0]
     data.comments = parallel[1]
+
     return data
   }
 }

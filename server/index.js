@@ -3,7 +3,8 @@ const app = express()
 const imdbParser = require('./../app/parsers/ImdbParser');
 var bodyParser = require('body-parser')
 const Committer = require('../app/lib/committer')
-const _ = require('lodash')
+var merge = require('deepmerge');
+var _ = require('lodash')
 
 const filmow = require('../app/lib/filmow')
 
@@ -61,14 +62,7 @@ app.get('/obtainData',  async (req, res, next) => {
   let committer = new Committer()
   let resp = await committer.getByTitle(title)
 
-
-  let compose = {}
-
-  resp.forEach(item => {
-    compose = _.merge(compose, item)
-  })
-
-  sendJsonResponse(res, 200, { result : compose })
+  sendJsonResponse(res, 200, { result : resp })
 });
 
 const cluster = require('cluster');

@@ -87,5 +87,6 @@ module.exports = {
         chanel: "",
         cineSky: ""
 
-    }
+    },
+    comments: []
 }
