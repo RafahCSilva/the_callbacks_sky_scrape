@@ -13,3 +13,5 @@ function hasProfanify(str) {
 function isNotEmpty(str) {
     return str != "";
 }
+
+module.exports = hasProfanify;
