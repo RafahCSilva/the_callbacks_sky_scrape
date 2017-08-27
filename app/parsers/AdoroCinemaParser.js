@@ -2,8 +2,8 @@ const request = require('request');
 const cheerio = require('cheerio');
 const rp = require('request-promise');
 //const Committer = require('./../lib/committer');
-serie = require('./../../models/serie.js');
-movie = require('./../../models/movie.js'); 
+serie = require('./../models/serie.js');
+movie = require('./../models/movie.js'); 
 site = 'http://www.adorocinema.com';
 
 cSerie = ''; 
@@ -11,7 +11,8 @@ flag = true;
 
 
 async function screape(name ){
-
+    name = "Game of Thrones"; 
+    
     s = ""; 
     pesquisa = site + "/busca/?q="+ name.replace(' ', '+');
     try{ 
@@ -20,8 +21,8 @@ async function screape(name ){
  
        const $ = cheerio.load(html);
 
-        s =$('table.totalwidth.noborder.purehtml tr a').attr('href');
-        .log(s);
+        s = $('table.totalwidth.noborder.purehtml tr a').attr('href');
+        //console.log(s);
         flag = s.charAt(1)!='f';
         if (flag){
             await start(s);
@@ -33,7 +34,8 @@ async function screape(name ){
         
         
     } catch(err){
-        console.log("Serie indisponivel");
+        console.log("Serie indisponivel: " + err.message);
+        
     }
     
     
@@ -85,7 +87,7 @@ async function start(s){
           //  console.log(serie.technicalDetails);      
         
     }catch(err){
-        console.log("Dados da Serie indisponivel");
+        console.log("Dados da Serie indisponivel: " + err.message);
     }
     
         
@@ -103,7 +105,7 @@ async function findImages(site, cSeries){
         });
         
     }catch(err){
-        console.log("Imagens  indisponiveis");
+        console.log("Imagens  indisponiveis: " + err.message);
     }
         
 }
@@ -166,7 +168,7 @@ async function findSeasonsInfo(site, cSerie){
                return Promise.all(arr)
             });
         }catch(err){
-            console.log("Imagens  indisponiveis");
+            console.log("Imagens  indisponiveis: " + err.message);
         }
         
         var seasonsInfo =  { total: "" };
@@ -209,7 +211,7 @@ async function findEpisodesInfo(sLink, sNum) {
          
          
     }catch(err){
-        console.log("Nomes indisponiveis");
+        console.log("Nomes indisponiveis: " + err.message);
     }
         
         
@@ -295,7 +297,7 @@ async function findEpisodesInfo(sLink, sNum) {
          
              
     }catch(err){
-        console.log("Nomes indisponiveis");
+        console.log("Nomes indisponiveis: " + err.message);
     }
     
             
@@ -356,7 +358,7 @@ async function start2(s){
           //  console.log(serie.technicalDetails);      
         
     }catch(err){
-        console.log("Dados da Serie indisponivel");
+        console.log("Dados da Serie indisponivel "+ err.message);
     }
     
         
