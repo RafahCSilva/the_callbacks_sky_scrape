@@ -1,4 +1,4 @@
-{
+module.exports = {
     technicalDetails: {
         movieName: "",
         releaseYear: "",
@@ -10,34 +10,25 @@
         originalLanguage: "",
         synonyms: [""],
         availableLanguages: [""],
-        seasonsAmount: "",
-        episodesAmount: "", 
+        totalSeasons: "",
+        totalEpisodes: "", 
         soundtrack: [{
             name: "",
             author: "",
             lengthInSeconds: 0
         }],
         basedOnBook: "",
-        producers: [""]
+        producers: [""],
+        status: ""
     },
     about: {
+        rating: "", 
         sinposis: "",
         keywords: [""],
         genre: [""],
         theme: [""]
     },
-    cast: {
-        director: "",
-        creator: "",
-        production: "",
-        script: "",
-        list: [{
-            name: "",
-            sex: "",
-            character: "",
-            voiceActor: ""
-        }]
-    },
+    
     media: {
         logo: "",
         poster: "",
@@ -51,7 +42,7 @@
     seasons:[{
         number: "",
         year: "",
-        episodesAmount: "",
+        totalEpisodes: "",
         
         media: {
             poster: "",
@@ -62,6 +53,19 @@
             screenshots: [""]
         
         },
+        
+        cast: {
+            director: [""],
+            creator: [""],
+            production: [""],
+            script: [""],
+            list: [{
+                name: "",
+                sex: "",
+                character: "",
+                voiceActor: ""
+            }]
+    },
         
         episodes: [{
             name: "",
