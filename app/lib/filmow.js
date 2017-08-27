@@ -14,17 +14,16 @@ async function process (query) {
   try {
     resp = await rp.get({ url: searchLink, qs: propertiesObject })
   } catch (e) {
-    console.log('erro')
+    console.log(e)
     return []
   }
   let $ = cheerio.load(resp)
 
   let title = $('.search-result-item .title')
-
-  console.log("Starting process in parallel")
+  
+  //console.log("Starting process in parallel")
 
   let arr = []
-
 
   title.each(function (i, el) {
     arr.push(calculate(el).then(function(result) { 
@@ -32,7 +31,10 @@ async function process (query) {
     }))
   })
 
-  if(arr.length == 0) console.log("Nao encontramos nada, vida que segue!")
+  if(arr.length == 0) {
+    //console.log("Nao encontramos nada, vida que segue!")
+    return
+  }
   
   let join = await Promise.all(arr)
 
@@ -88,7 +90,7 @@ async function getComments(link){
       .split("\n")
       .filter(item => item != '')
   } catch (e) {
-    console.log('failed on commnets')
+    console.log(e)
     return []
   }
 
@@ -101,7 +103,7 @@ async function getStars(link) {
     $ = cheerio.load(resp)
     return $('.average').html()
   } catch (e) {
-    console.log('failed on stars')
+    console.log(e)
     return []
   }
 

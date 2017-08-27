@@ -89,98 +89,111 @@ async function getSeasons(seasonUrls) {
 }
 
 async function scrapePage (url, query) {
-  let html = await rp.get(url)
-  if (html) {
-    const $ = cheerio.load(html);
-
-    let mediaType = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div > a:nth-child(9)');
-    let obj = (mediaType.text().indexOf('TV Series') >= 0) ? serie : movie;
-    
-    //get soundtrack
-    let soundtrackUrl = url + '/soundtrack';
-    let soundHtml = await rp.get(soundtrackUrl)
-    if (soundHtml) {
-      const $2 = cheerio.load(soundHtml);
-      $2('#soundtracks_content .soundTrack').each(function (i, elm) {
-        let name = $2(elm).text().split('\n')[0];
-        let writer = $2(elm).text().split('\n')[1].replace('Written by ', '');
-        obj.technicalDetails.soundtrack.push({
-          name: name.substr(0, name.length-1),
-          writer: writer.substr(0, writer.length-1)
-        });
-      });
-
-      obj.technicalDetails.movieName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
-      obj.technicalDetails.originalName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
-      obj.technicalDetails.duration = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div.subtext > time').text().replace('\n', '').trim();
-      obj.technicalDetails.originalLanguage = $('#titleDetails > div:nth-child(5) > a').text();
-
-      obj.about.sinopsis = $('#titleStoryLine .inline.canwrap p').text();
-      $('#titleStoryLine > div:nth-child(6) a').each(function (i, elm) {
-        if ($(elm).text().indexOf('See All') < 0) {
-          obj.about.keywords.push($(elm).text());
-        }
-      });
-
-      $('.title_wrapper .subtext a').each(function (i, elm) {
-        if ($(elm).attr('href').indexOf('genre') > 0) {
-          obj.about.genre.push($(elm).find('span').text());
-        }
-      });
-
-      $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
-        obj.technicalDetails.producers.push($(j).text());
-      });
-
-      //TODO change for image base64 and download
-      obj.media.poster = $('#title-overview-widget > div.vital > div.slate_wrapper > div.poster > a > img').attr('src');
-    
-    
-      if (mediaType.text().indexOf('TV Series') >= 0) {
-        obj.technicalDetails.releaseYear = $(mediaType).text().match(/\d{4}/)[0];
-        
-        let seasonUrls = [];
-        $('#title-episode-widget > div.seasons-and-year-nav > div:nth-child(4) a').each(function (i, elm) {
-          seasonUrls.push('http://www.imdb.com' + $(elm).attr('href').split('&ref')[0]);
-        });
-        
-        obj.seasons = await getSeasons(seasonUrls);
-        console.log(obj.seasons[0].episodes);
-      } else { //for movies
-        obj.technicalDetails.releaseYear = $('#titleYear > a').text();
-        
-        $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(2) > span a > span').each(function (i, elm) {
-          obj.cast.directors = $(elm).text();
-        });
-  
-        $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(3) > span').find('a > span').each(function (i, elm) {
-          obj.cast.creators.push($(elm).text());
-        });
-        
-        let distributorsHtml = await rp.get(url + '/companycredits')
-        if (distributorsHtml) {
-          const $cred = cheerio.load(html);
-  
-          $cred('h4#production').next().find('li a').each(function (i, elm) {
-            obj.cast.production.push($(elm).text());
-          });
-  
-          $cred('h4#distributors').next().find('li').each(function (i, elm) {
-            obj.cast.distributors.push($(elm).text().replace(/\s+/g, ' ').trim());
-          });
-  
-          let committer = new Committer();
-  
-          let payload = {
-            title: query,
-            source: 'IMDB',
-            result : movie
-          }
-  
-          // committer.post(payload);
-          return payload
-        }
-      }
-    }
+  let html
+  try {
+    html = await rp.get(url)
+  } catch (e) {
+    return
   }
+  
+
+  const $ = cheerio.load(html);
+
+  let mediaType = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div > a:nth-child(9)');
+  let obj = (mediaType.text().indexOf('TV Series') >= 0) ? serie : movie;
+  
+  //get soundtrack
+  let soundtrackUrl = url + '/soundtrack';
+  let soundHtml
+
+  try {
+    soundHtml = await rp.get(soundtrackUrl)
+  } catch(e) {
+    return
+  }
+
+  const $2 = cheerio.load(soundHtml);
+  $2('#soundtracks_content .soundTrack').each(function (i, elm) {
+    let name = $2(elm).text().split('\n')[0];
+    let writer = $2(elm).text().split('\n')[1].replace('Written by ', '');
+    obj.technicalDetails.soundtrack.push({
+      name: name.substr(0, name.length-1),
+      writer: writer.substr(0, writer.length-1)
+    });
+  });
+
+  obj.technicalDetails.movieName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
+  obj.technicalDetails.originalName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
+  obj.technicalDetails.duration = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div.subtext > time').text().replace('\n', '').trim();
+  obj.technicalDetails.originalLanguage = $('#titleDetails > div:nth-child(5) > a').text();
+
+  obj.about.sinopsis = $('#titleStoryLine .inline.canwrap p').text();
+  $('#titleStoryLine > div:nth-child(6) a').each(function (i, elm) {
+    if ($(elm).text().indexOf('See All') < 0) {
+      obj.about.keywords.push($(elm).text());
+    }
+  });
+
+  $('.title_wrapper .subtext a').each(function (i, elm) {
+    if ($(elm).attr('href').indexOf('genre') > 0) {
+      obj.about.genre.push($(elm).find('span').text());
+    }
+  });
+
+  $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
+    obj.technicalDetails.producers.push($(j).text());
+  });
+
+  //TODO change for image base64 and download
+  obj.media.poster = $('#title-overview-widget > div.vital > div.slate_wrapper > div.poster > a > img').attr('src');
+
+
+  if (mediaType.text().indexOf('TV Series') >= 0) {
+    obj.technicalDetails.releaseYear = $(mediaType).text().match(/\d{4}/)[0];
+    
+    let seasonUrls = [];
+    $('#title-episode-widget > div.seasons-and-year-nav > div:nth-child(4) a').each(function (i, elm) {
+      seasonUrls.push('http://www.imdb.com' + $(elm).attr('href').split('&ref')[0]);
+    });
+    
+    obj.seasons = await getSeasons(seasonUrls);
+  } else { //for movies
+    obj.technicalDetails.releaseYear = $('#titleYear > a').text();
+    
+    $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(2) > span a > span').each(function (i, elm) {
+      obj.cast.directors = $(elm).text();
+    });
+
+    $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(3) > span').find('a > span').each(function (i, elm) {
+      obj.cast.creators.push($(elm).text());
+    });
+    
+    let distributorsHtml;
+    try {
+      distributorsHtml = await rp.get(url + '/companycredits')
+    } catch (e) {
+      return
+    }
+    const $cred = cheerio.load(html);
+
+    $cred('h4#production').next().find('li a').each(function (i, elm) {
+      obj.cast.production.push($(elm).text());
+    });
+
+    $cred('h4#distributors').next().find('li').each(function (i, elm) {
+      obj.cast.distributors.push($(elm).text().replace(/\s+/g, ' ').trim());
+    });
+  }
+
+  let committer = new Committer();
+
+  let payload = {
+    title: query,
+    source: 'IMDB',
+    result : movie
+  }
+
+  committer.post(payload);
+
+  return payload
 }
