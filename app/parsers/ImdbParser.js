@@ -6,128 +6,194 @@ const serie = require('./../models/serie');
 const Committer = require('./../lib/committer');
 
 module.exports.scrape = async function (title) {
-  let html = null
-
   try {
-    html = await rp.get('http://www.imdb.com/find?q=' + title.toLowerCase().trim().replace(/ +/g, '+'))
-  } catch (e) {
-    return null
-  }
+    let html = await rp.get('http://www.imdb.com/find?q=' + title.toLowerCase().trim().replace(/ +/g, '+'))
+    if (html) {
+      const $list = cheerio.load(html);
   
-  const $list = cheerio.load(html);
-
-  let found = false;
-  let movieUrl = '';
-  let arr = []
-
-  $list('.result_text a').each((i, item) => {
-    arr.push('http://www.imdb.com' + $list(item).attr('href').split('/?ref')[0])
-  })
-  
-  if(arr.length != 0) {
-    let scrapped = await scrapePage(arr[0], title)
-
-    return scrapped
+      let movieUrls = [];
+      $list('#main > div > div:nth-child(3) > table > tbody > tr.findResult').each(function (i, elm) {
+        movieUrls.push('http://www.imdb.com' + $list(elm).find('.result_text a').attr('href').split('/?ref')[0]);
+      });
+      
+      let scrapeds = [];
+      movieUrls.forEach(function (elm, i) {
+        scrapeds.push(scrapePage(elm, title).then(function (result) {
+          return result;
+        }));
+      });
+      
+      let result = Promise.all(scrapeds);
+      
+      return result;
+    } else {
+      console.log('Not HTML')
+    }
+  } catch (err) {
+    console.log('Failed parsing website: ' + err.message);
   }
 }
 
+async function findSeasonInfo(seasonUrl) {
+  try {
+    let html = await rp.get(seasonUrl);
+    
+    if (html) {
+      const $ssn = cheerio.load(html);
+      let season = {};
+      season.number = Number($ssn('#bySeason').val());
+      season.year = $ssn('#byYear option').eq(Number(season.number)).val();
+      season.totalEpisodes = $ssn('#episodes_content > div.clear > div.list.detail.eplist > div').length;
+      
+      season.media = {};
+      season.media.poster = $ssn('#main > div.article.listo.list > div.subpage_title_block > a > img').attr('src');
+      // season.media.trailers = //get from youtube
+      // season.media.promoVideos = //get from youtube
+      season.media.screenshots = [];
+      $ssn('#episodes_content > div.clear > div.list.detail.eplist > div .image img').each(function (i, elm) {
+        season.media.screenshots.push($ssn(elm).attr('src'));
+      });
+      
+      season.episodes = [];
+      $ssn('#episodes_content > div.clear > div.list.detail.eplist > div').each(function (i, elm) {
+        season.episodes.push({
+          name: $ssn(elm).find('div.info strong a').text(),
+          number: $ssn(elm).find('div.image a div div').text().toLowerCase().split('ep')[1].trim(),
+          director: "",
+          creator: "",
+          sinopsis: $ssn(elm).find('div.info > div.item_description').text().trim(),
+          screenshots: []
+        });
+      });
+      
+      return season;
+    } else {
+      console.log('No HTML found');
+    }
+  } catch (err) {
+    console.log('failed to fetch season: ' + err.message);
+  }
+}
+
+async function getSeasons(seasonUrls) {
+  let seasonPromises = [];
+  seasonUrls.forEach(function (sUrl) {
+    seasonPromises.push(findSeasonInfo(sUrl).then(function(result) { 
+        return result;
+    }));
+  });
+  
+  let seasons = Promise.all(seasonPromises);
+  
+  return seasons;
+}
+
 async function scrapePage (url, query) {
-  let html = null
+  let html
   try {
     html = await rp.get(url)
   } catch (e) {
     return
   }
+  
 
   const $ = cheerio.load(html);
 
   let mediaType = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div > a:nth-child(9)');
-  //TODO check the common attrs between series and movies and use them to also put series information.
-  if (mediaType.text().indexOf('TV Series') >= 0) {
-    serie.technicalDetails.releaseYear = $(mediaType).text().match(/\d{4}/)[0];
-  } else {
-    //get soundtrack
-    let soundtrackUrl = url + '/soundtrack';
-    let soundHtml = null
-    try {
-      soundHtml = await rp.get(soundtrackUrl)
-      const $2 = cheerio.load(soundHtml);
-      $2('#soundtracks_content .soundTrack').each(function (i, elm) {
-        let name = $2(elm).text().split('\n')[0];
-        let writer = $2(elm).text().split('\n')[1].replace('Written by ', '');
-        movie.technicalDetails.soundtrack.push({
-          name: name.substr(0, name.length-1),
-          writer: writer.substr(0, writer.length-1)
-        });
-      });
+  let obj = (mediaType.text().indexOf('TV Series') >= 0) ? serie : movie;
+  
+  //get soundtrack
+  let soundtrackUrl = url + '/soundtrack';
+  let soundHtml
 
-      movie.technicalDetails.movieName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
-      movie.technicalDetails.releaseYear = $('#titleYear > a').text();
-      movie.technicalDetails.originalName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
-      movie.technicalDetails.duration = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div.subtext > time').text();
-      movie.technicalDetails.originalLanguage = $('#titleDetails > div:nth-child(5) > a').text();
+  try {
+    soundHtml = await rp.get(soundtrackUrl)
+  } catch(e) {
+    return
+  }
 
-      movie.about.sinposis = $('#titleStoryLine .inline.canwrap p').text();
-      $('#titleStoryLine > div:nth-child(6) a').each(function (i, elm) {
-        if ($(elm).text().indexOf('See All') < 0) {
-          movie.about.keywords.push($(elm).text());
-        }
-      });
+  const $2 = cheerio.load(soundHtml);
+  $2('#soundtracks_content .soundTrack').each(function (i, elm) {
+    let name = $2(elm).text().split('\n')[0];
+    let writer = $2(elm).text().split('\n')[1].replace('Written by ', '');
+    obj.technicalDetails.soundtrack.push({
+      name: name.substr(0, name.length-1),
+      writer: writer.substr(0, writer.length-1)
+    });
+  });
 
-      $('.title_wrapper .subtext a').each(function (i, elm) {
-        if ($(elm).attr('href').indexOf('genre') > 0) {
-          movie.about.genre.push($(elm).find('span').text());
-        }
-      });
+  obj.technicalDetails.movieName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
+  obj.technicalDetails.originalName = $('.title_wrapper h1').text().replace('&nbsp;', '').trim();
+  obj.technicalDetails.duration = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div.subtext > time').text().replace('\n', '').trim();
+  obj.technicalDetails.originalLanguage = $('#titleDetails > div:nth-child(5) > a').text();
 
-      $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
-        movie.technicalDetails.producers.push($(j).text());
-      });
-
-      $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(2) > span').find('a > span').each(function (i, elm) {
-        movie.cast.directors = $(elm).text();
-      });
-
-      $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(3) > span').find('a > span').each(function (i, elm) {
-        movie.cast.creators.push($(elm).text());
-      });
-
-      //TODO change for image base64 and download
-      movie.media.poster = $('#title-overview-widget > div.vital > div.slate_wrapper > div.poster > a > img').attr('src');
-    } catch (e) {
-      console.log("fail second")
+  obj.about.sinopsis = $('#titleStoryLine .inline.canwrap p').text();
+  $('#titleStoryLine > div:nth-child(6) a').each(function (i, elm) {
+    if ($(elm).text().indexOf('See All') < 0) {
+      obj.about.keywords.push($(elm).text());
     }
+  });
+
+  $('.title_wrapper .subtext a').each(function (i, elm) {
+    if ($(elm).attr('href').indexOf('genre') > 0) {
+      obj.about.genre.push($(elm).find('span').text());
+    }
+  });
+
+  $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
+    obj.technicalDetails.producers.push($(j).text());
+  });
+
+  //TODO change for image base64 and download
+  obj.media.poster = $('#title-overview-widget > div.vital > div.slate_wrapper > div.poster > a > img').attr('src');
 
 
-    // distributors
-    let distributorsHtml = null
+  if (mediaType.text().indexOf('TV Series') >= 0) {
+    obj.technicalDetails.releaseYear = $(mediaType).text().match(/\d{4}/)[0];
+    
+    let seasonUrls = [];
+    $('#title-episode-widget > div.seasons-and-year-nav > div:nth-child(4) a').each(function (i, elm) {
+      seasonUrls.push('http://www.imdb.com' + $(elm).attr('href').split('&ref')[0]);
+    });
+    
+    obj.seasons = await getSeasons(seasonUrls);
+  } else { //for movies
+    obj.technicalDetails.releaseYear = $('#titleYear > a').text();
+    
+    $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(2) > span a > span').each(function (i, elm) {
+      obj.cast.directors = $(elm).text();
+    });
+
+    $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(3) > span').find('a > span').each(function (i, elm) {
+      obj.cast.creators.push($(elm).text());
+    });
+    
+    let distributorsHtml;
     try {
       distributorsHtml = await rp.get(url + '/companycredits')
-      const $cred = cheerio.load(html);
-
-      $cred('h4#production').next().find('li a').each(function (i, elm) {
-        movie.cast.production.push($(elm).text());
-      });
-
-      $cred('h4#distributors').next().find('li').each(function (i, elm) {
-        movie.cast.distributors.push($(elm).text().replace(/\s+/g, ' ').trim());
-      });
-
-
     } catch (e) {
-      console.log("fail third")
+      return
     }
+    const $cred = cheerio.load(html);
 
-    let committer = new Committer();
+    $cred('h4#production').next().find('li a').each(function (i, elm) {
+      obj.cast.production.push($(elm).text());
+    });
 
-    let payload = {
-      title: query,
-      source: 'IMDB',
-      result : movie
-    }
-
-    committer.post(payload);
-
-    return payload
+    $cred('h4#distributors').next().find('li').each(function (i, elm) {
+      obj.cast.distributors.push($(elm).text().replace(/\s+/g, ' ').trim());
+    });
   }
+
+  let committer = new Committer();
+
+  let payload = {
+    title: query,
+    source: 'IMDB',
+    result : movie
+  }
+
+  committer.post(payload);
+
+  return payload
 }
