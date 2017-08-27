@@ -1,7 +1,10 @@
 const fs = require('fs')
 const cheerio = require('cheerio');
-const movie = require('../models/movie.js');
-const generico = require('../models/generico.js');
+let _ = require('lodash')
+
+let generico = _.cloneDeep(require('./../models/generico.js'));
+let movie = _.cloneDeep(require('./../models/movie.js')); 
+
 const Committer = require('../lib/committer')
 
 var request = require('request');
