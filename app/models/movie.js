@@ -1,4 +1,5 @@
 module.exports = {
+    _type: 'movie',
     technicalDetails: {
         movieName: "",
         releaseYear: "",
@@ -15,7 +16,7 @@ module.exports = {
         producers: []
     },
     about: {
-        sinposis: "",
+        sinopsis: "",
         keywords: [],
         genre: [],
         theme: []
