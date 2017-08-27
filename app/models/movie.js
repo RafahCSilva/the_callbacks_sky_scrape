@@ -24,6 +24,7 @@ module.exports = {
         directors: [],
         creators: [],
         production: [],
+        distributors: [],
         script: "",
         list: [{
             name: "",
