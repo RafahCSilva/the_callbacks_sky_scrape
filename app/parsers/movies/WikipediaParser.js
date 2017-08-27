@@ -26,6 +26,18 @@ function extractIdiomaPt(body) {
     })
 }
 
+function getAlternativeSpellings(title) {
+    let reqUrl = "http://en.wikipedia.org/w/api.php?action=query&format=json&list=backlinks&bltitle=" + title + "&blfilterredir=redirects&bllimit=5";
+    request.get({uri: reqUrl,
+                json: true,
+                encoding: 'utf-8',
+                function(error, response, body) {
+                    if (!error) {
+                    }
+                }
+            });
+}
+
 
 function extractStarringPt(body) {
     const $ = cheerio.load(body);
