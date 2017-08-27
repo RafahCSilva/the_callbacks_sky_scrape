@@ -51,9 +51,28 @@ app.get('/obtainData',  async (req, res, next) => {
   sendJsonResponse(res, 200, { result : resp })
 });
 
-app.listen(app.get('port'), function () {
+const cluster = require('cluster');
+const http = require('http');
+const numCPUs = require('os').cpus().length;
+
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+} else {
+  // Workers can share any TCP connection
+  // In this case it is an HTTP server
+  app.listen(app.get('port'), function () {
     console.log("Node app is running at localhost:" + app.get('port'))
-});
+  });
+}
 
 function createSleepPromise(timeout) {
     return new Promise(function(resolve) {
