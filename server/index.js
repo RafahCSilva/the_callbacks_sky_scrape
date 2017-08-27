@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const imdbParser = require('./../app/parsers/ImdbParser');
 var bodyParser = require('body-parser')
 
 const filmow = require('../app/lib/filmow')
@@ -28,7 +29,8 @@ app.post('/processOne',  async (req, res, next) => {
   let title = req.body._source.programTitle
   let releaseDate = req.body._source.releaseYear
 
-  filmow(title)
+  filmow(title);
+  imdbParser.scrape(title);
   
   res.json({test: 'felipe'});
 });

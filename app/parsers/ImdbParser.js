@@ -1,7 +1,8 @@
 const request = require('request');
 const cheerio = require('cheerio');
-const movie = require('./../models/movie.js');
-const serie = require('./../models/serie.js');
+const movie = require('./../models/movie');
+const serie = require('./../models/serie');
+const Committer = require('./../lib/committer');
 
 
 module.exports.scrape = function (title) {
@@ -93,11 +94,15 @@ var scrapePage = function (url, query) {
                                     movie.cast.distributors.push($(elm).text().replace(/\s+/g, ' ').trim());
                                 });
                                 
-                                return {
+                                let committer = new Committer();
+                                
+                                console.log('Enviando dados...');
+                                
+                                committer.post({
                                     title: query,
                                     source: 'IMDB',
                                     result : movie
-                                }
+                                });
                             }
                         });
                     }
