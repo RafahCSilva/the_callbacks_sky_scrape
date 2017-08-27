@@ -5,30 +5,6 @@ const movie = require('./../models/movie');
 const serie = require('./../models/serie');
 const Committer = require('./../lib/committer');
 
-
-module.exports.scrape = async function (title) {
-  let html = await rp.get('http://www.imdb.com/find?q=' + title.toLowerCase().trim().replace(/ +/g, '+'))
-  if (html) {
-    const $list = cheerio.load(html);
-
-    let found = false;
-    let movieUrl = '';
-    let resp = $list('#main > div > div:nth-child(3) > table tr').each(function (idx, elm) {
-      // pega o que tiver titulo igual
-      if ($list(elm).find('.result_text a').text() == title && found == false) {
-        found = true
-        movieUrl = 'http://www.imdb.com' + $list(elm).find('.result_text a').attr('href').split('/?ref')[0];
-      }
-    });
-    
-    let scrapped = await scrapePage(movieUrl, title);
-    
-    return scrapped
-  } else {
-    console.log('Not HTML')
-  }
-}
-
 async function scrapePage (url, query) {
   let html = await rp.get(url)
   if (html) {
@@ -115,5 +91,32 @@ async function scrapePage (url, query) {
         }
       }
     }
+  }
+}
+
+module.exports.scrape = async function (title) {
+  try {
+    let html = await rp.get('http://www.imdb.com/find?q=' + title.toLowerCase().trim().replace(/ +/g, '+'))
+    if (html) {
+      const $list = cheerio.load(html);
+  
+      let found = false;
+      let movieUrl = '';
+      let resp = $list('#main > div > div:nth-child(3) > table tr').each(function (idx, elm) {
+        // pega o que tiver titulo igual
+        if ($list(elm).find('.result_text a').text() == title && found == false) {
+          found = true
+          movieUrl = 'http://www.imdb.com' + $list(elm).find('.result_text a').attr('href').split('/?ref')[0];
+        }
+      });
+      
+      let scrapped = await scrapePage(movieUrl, title);
+      
+      return scrapped
+    } else {
+      console.log('Not HTML')
+    }
+  } catch (err) {
+    console.log('Failed parsing website: ' + err.message);
   }
 }
