@@ -8,26 +8,23 @@ module.exports = {
         parentalRating: "",
         universe: "",
         originalLanguage: "",
-        synonyms: [""],
-        availableLanguages: [""],
-        soundtrack: [{
-            name: "",
-            author: "",
-            lengthInSeconds: 0
-        }],
+        synonyms: [],
+        availableLanguages: [],
+        soundtrack: [],
         basedOnBook: "",
-        producers: [""]
+        producers: []
     },
     about: {
         sinposis: "",
-        keywords: [""],
-        genre: [""],
-        theme: [""]
+        keywords: [],
+        genre: [],
+        theme: []
     },
     cast: {
-        director: "",
-        creator: "",
-        production: "",
+        directors: [],
+        creators: [],
+        production: [],
+        distributors: [],
         script: "",
         list: [{
             name: "",
@@ -39,15 +36,15 @@ module.exports = {
     media: {
         logo: "",
         poster: "",
-        trailers: [""],
-        promoVideos: [""],
-        backdropImages: [""],
-        promoImages: [""],
-        screenshots: [""]
+        trailers: [],
+        teasers: [],
+        backdropImages: [],
+        promoImages: [],
+        screenshots: []
     },
     sky: {
-        schedules: [""],
-        channels: [""],
+        schedules: [],
+        channels: [],
         cineSky: "",
     }
 }
