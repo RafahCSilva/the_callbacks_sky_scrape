@@ -8,7 +8,7 @@ var DB_URL = 'http://thecallbacks.ddns.net:8080/hack/data/hack/data/'
 
 async function process (query) {
   let searchLink = 'https://filmow.com/buscar/'
-  var propertiesObject = { q: query, movie_type : 's' }
+  var propertiesObject = { q: query }
 
   let resp = await rp.get({ url: searchLink, qs: propertiesObject })
   let $ = cheerio.load(resp)
@@ -16,19 +16,34 @@ async function process (query) {
   let title = $('.search-result-item .title')
 
   console.log("Starting process in parallel")
-  async.map(title, async.asyncify(calculate), async function(err, results) {
 
-    let committer = new Committer()
-    let payload = {
-      title: query,
-      source: 'filmow',
-      result : results
-    }
+  let arr = []
 
-    let resp = await committer.post(payload)
-    console.log("Finished execution")
-    console.log(resp)
-  });
+  title.each(function (i, el) {
+    arr.push(calculate(el).then(function(result) { 
+        return result
+    }))
+  })
+
+  let join = Promise.all(arr)
+
+  return join
+
+
+  // async.map(title, async.asyncify(calculate), async function(err, results) {
+
+  //   let committer = new Committer()
+  //   let payload = {
+  //     title: query,
+  //     source: 'filmow',
+  //     result : results
+  //   }
+
+  //   let resp = await committer.post(payload)
+  //   console.log("Finished execution")
+    
+  //   return payload
+  // });
 
   async function calculate(el) {
     let text = $(el).text().replace(/\r?\n|\r/g, ' ')
