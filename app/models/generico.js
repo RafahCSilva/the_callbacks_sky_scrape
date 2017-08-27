@@ -1,7 +1,7 @@
 module.exports = {
-    _type: 'movie',
+    type: "",
     technicalDetails: {
-        movieName: "",
+        name: "",
         releaseYear: "",
         originalName: "",
         duration: "",
@@ -16,18 +16,12 @@ module.exports = {
         producers: []
     },
     about: {
-        rating: '',
-        sinopsis: "",
+        sinposis: "",
         keywords: [],
         genre: [],
         theme: []
     },
     cast: {
-        directors: [],
-        creators: [],
-        production: [],
-        distributors: [],
-        script: "",
         list: [{
             name: "",
             sex: "",
@@ -48,6 +42,5 @@ module.exports = {
         schedules: [],
         channels: [],
         cineSky: "",
-    },
-    comments: []
+    }
 }

@@ -3,6 +3,7 @@ const app = express()
 const imdbParser = require('./../app/parsers/ImdbParser');
 var bodyParser = require('body-parser')
 const Committer = require('../app/lib/committer')
+const mfhdParser = require('../app/parsers/MegaFilmesHDParser');
 var merge = require('deepmerge');
 var _ = require('lodash')
 
@@ -28,9 +29,10 @@ let queue = []
 setInterval(function () {
   let title = queue.shift()
   if(title != null) {
-    console.log('Processando ' + title)
-    filmow(title)
-    imdbParser.scrape(title)
+    console.log('Processando ' + title);
+    filmow(title);
+    imdbParser.scrape(title);
+    mfhdParser.scrape(title);
   }
 }, 500)
 
