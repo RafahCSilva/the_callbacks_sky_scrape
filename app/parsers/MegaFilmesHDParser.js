@@ -1,7 +1,8 @@
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-const movie = require('./../models/movie');
-const serie = require('./../models/serie');
+let _ = require('lodash')
+let serie = _.cloneDeep(require('./../models/serie.js'));
+let movie = _.cloneDeep(require('./../models/movie.js')); 
 const Committer = require('./../lib/committer');
 
 const baseUrl = 'http://megafilmeshd.org';

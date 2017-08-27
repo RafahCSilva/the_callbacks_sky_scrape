@@ -1,8 +1,9 @@
 const request = require('request');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-let movie = require('./../models/movie');
-let serie = require('./../models/serie');
+const _ = require('lodash');
+let serie = _.cloneDeep(require('./../models/serie.js'));
+letmovie = _.cloneDeep(require('./../models/movie.js')); 
 const Committer = require('./../lib/committer');
 const yt = require('./youtubeParser');
 var obj;

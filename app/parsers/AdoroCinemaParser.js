@@ -1,9 +1,10 @@
 const request = require('request');
 const cheerio = require('cheerio');
 const rp = require('request-promise');
+const _ = require('lodash')
 //const Committer = require('./../lib/committer');
-serie = require('./../models/serie.js');
-movie = require('./../models/movie.js'); 
+serie = _.cloneDeep(require('./../models/serie.js'));
+movie = _.cloneDeep(require('./../models/movie.js')); 
 site = 'http://www.adorocinema.com';
 const Committer = require('../lib/committer')
 

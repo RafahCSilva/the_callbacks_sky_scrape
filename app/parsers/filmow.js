@@ -4,6 +4,7 @@ const cheerio = require('cheerio')
 const async = require('async')
 const Committer = require('../lib/committer')
 const _ = require('lodash')
+const profanity = require('../lib/profanityChecker')
 
 var DB_URL = 'http://thecallbacks.ddns.net:8080/hack/data/hack/data/'
 
@@ -47,7 +48,7 @@ async function process (query) {
       serie.technicalDetails.releaseYear = item.year
       serie.technicalDetails.movieName = item.title
       serie.about.rating = item.stars
-      serie.comments = item.comments
+      serie.comments = item.comments.filter((item) => !profanity(item))
       return serie
     }
 
@@ -56,7 +57,7 @@ async function process (query) {
       movie.technicalDetails.releaseYear = item.year
       movie.technicalDetails.movieName = item.title
       movie.about.rating = item.stars
-      movie.comments = item.comments
+      movie.comments = item.comments.filter((item) => !profanity(item))
       return movie
     }
   })
