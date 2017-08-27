@@ -19,6 +19,14 @@ function extractDuracaoPt(body) {
     return $('td:contains("Duração")').next().text();
 }
 
+function extractIdiomaPt(body) {
+    const $ = cheerio.load(body);
+    return $('td:contains("Idioma")').next().children('a').map(function(i, node) {
+        return $(node).text().toLocaleLowerCase();
+    })
+}
+
+
 function extractStarringPt(body) {
     const $ = cheerio.load(body);
     return $('td:contains("Elenco")').next().children('a').map(function(i, node) {
@@ -65,6 +73,13 @@ function getWikipediaCleanerHtml(title) {
                         extractedSomeDataSucessfully = true;
                     }
 
+                    let idioma = extractIdiomaPt(body);
+                    if (idioma != null && idioma.length != 0) {
+                        objRet.result.language = idioma.toArray();
+                        console.log(idioma.toArray().toString());
+                        extractedSomeDataSucessfully = true;
+                    }
+
                     let duration = extractDuracaoPt(body);
                     if (duration != null && duration.length != 0) {
                         parsedDuration = parseDuration(duration);
@@ -75,13 +90,10 @@ function getWikipediaCleanerHtml(title) {
                     objRet.title = title;
                     objRet.source = 'wikipedia';
                     if (extractedSomeDataSucessfully) {
-                        // pushToDB(objRet);
+                        pushToDB(objRet);
                         console.log()
                     }
                 }
-                else {
-                }
-                // let genero = $('td').filter((i,el) => $(el).text() == 'Gênero')
             })
 
 }
@@ -100,12 +112,6 @@ function scrape(titulo) {
     request.get({uri: reqUrl,
                 json: true,
                 encoding: 'utf-8'}, function (error, response, body) {
-                if (error == null) {
-                    console.log("sucesso: " + reqUrl);
-                }
-                else {
-                    console.log("erro: " + reqUrl);
-                }
                  if(!error) {
                     hasFirstResult = body.length > 0 && body[1].length > 0;
                     if(hasFirstResult) {
