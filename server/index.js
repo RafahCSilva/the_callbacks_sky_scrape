@@ -2,12 +2,16 @@ const express = require('express')
 const app = express()
 const imdbParser = require('./../app/parsers/ImdbParser');
 var bodyParser = require('body-parser')
-const Committer = require('../app/lib/committer')
-const mfhdParser = require('../app/parsers/MegaFilmesHDParser');
 var merge = require('deepmerge');
 var _ = require('lodash')
 
-const filmow = require('../app/lib/filmow')
+// PARSERS
+const Committer = require('../app/lib/committer')
+const mfhdParser = require('../app/parsers/MegaFilmesHDParser');
+const wiki = require('../app/parsers/WikipediaParser')
+const adoro = require('../app/parsers/AdoroCinemaParser')
+const filmow = require('../app/parsers/filmow')
+const twitter = require('../app/parsers/twitterParser')
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -31,8 +35,12 @@ setInterval(function () {
   if(title != null) {
     console.log('Processando ' + title);
     filmow(title);
-    imdbParser.scrape(title);
-    mfhdParser.scrape(title);
+    imdbParser.scrape(title)
+    mfhdParser.scrape(title)
+    wiki(title)
+    adoro(title)
+    //twitter(title)
+    //youtube(title)
   }
 }, 500)
 

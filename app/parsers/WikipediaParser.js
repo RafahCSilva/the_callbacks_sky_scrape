@@ -1,7 +1,8 @@
 const fs = require('fs')
 const cheerio = require('cheerio');
-const movie = require('../../models/movie.js');
-const generico = require('../../models/generico.js');
+const movie = require('../models/movie.js');
+const generico = require('../models/generico.js');
+const Committer = require('../lib/committer')
 
 var request = require('request');
 var rp = require('request-promise');
@@ -112,11 +113,15 @@ async function getObject(body, title) {
         extractedSomeDataSucessfully++;
     }
 
-    objRet.title = title;
-    objRet.source = 'wikipedia';
-        if (extractedSomeDataSucessfully > 2) {
-            pushToDB(convertToGeneric(objRet));
-            return objRet;
+    if (extractedSomeDataSucessfully > 2) {
+        let novo = convertToGeneric(objRet)
+        let com = new Committer()
+        com.post({
+            title: title,
+            source: 'wikipedia',
+            result: novo
+        })
+        return objRet;
     }
     return null;
 }
