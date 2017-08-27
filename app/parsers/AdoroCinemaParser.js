@@ -3,27 +3,33 @@ const cheerio = require('cheerio');
 const rp = require('request-promise');
 //const Committer = require('./../lib/committer');
 serie = require('./../../models/serie.js');
+movie = require('./../../models/movie.js'); 
 site = 'http://www.adorocinema.com';
 
 cSerie = ''; 
-//cSerie = '/series/serie-7157/';
-//cSerie = '/series/serie-11561/';
-name = "Rick and Morty";
+flag = true;
 
 
-async function screape(){
+async function screape(name ){
+
+    s = ""; 
     pesquisa = site + "/busca/?q="+ name.replace(' ', '+');
     try{ 
     
-       let html = await rp.get(pesquisa)
+       let html = await rp.get(pesquisa);
  
        const $ = cheerio.load(html);
-        //console.log(html);
 
-        //sSerie = $('table.totalwidth.noborder.purehtml tr a').attr('href');
-
-        await start($('table.totalwidth.noborder.purehtml tr a').attr('href'));
+        s =$('table.totalwidth.noborder.purehtml tr a').attr('href');
+        .log(s);
+        flag = s.charAt(1)!='f';
+        if (flag){
+            await start(s);
+        }
         
+        if(!flag){
+            await start2(s);
+        }
         
         
     } catch(err){
@@ -32,13 +38,15 @@ async function screape(){
     
     
    
-
- return serie;
-
+    if(flag){   
+        return serie;
+    }else{
+        return movie;
+    }
 }
 
-(async function () {
-    let newSerie = await screape();
+(async function (name) {
+    let newSerie = await screape(name);
     console.log(newSerie)
 })();
 
@@ -82,7 +90,6 @@ async function start(s){
     
         
 }
-
 
 async function findImages(site, cSeries){
 
@@ -143,7 +150,7 @@ async function findSeasonsInfo(site, cSerie){
                         voiceActor: ""
                     }]
                 },
-    
+
                 episodes: [{
                     name: "",
                     number: "", 
@@ -155,12 +162,7 @@ async function findSeasonsInfo(site, cSerie){
                 }]});
                 //Buscar dados de ep. de cada temp.
                arr.push(findEpisodesInfo(sLink, sNum));
-                
-                
-               
 
-               
-               
                return Promise.all(arr)
             });
         }catch(err){
@@ -297,5 +299,66 @@ async function findEpisodesInfo(sLink, sNum) {
     }
     
             
+}
+
+
+
+
+
+
+async function start2(s){
+    cSerie = s; 
+    try{
+        let html = await rp.get(site+cSerie); 
+        const $ = cheerio.load(html);
+    
+        movie.technicalDetails.movieName = $('#content-layout > div > div.row.row-col-padded > div > div > div.titlebar-title.titlebar-title-lg').text().trim();
+        movie.technicalDetails.releaseYear = $('#synopsis-details > div.ovw-synopsis-info > div.more-hidden > div:nth-child(1) > span.that').text().trim();
+        movie.technicalDetails.originalName = $('#synopsis-details > div.ovw-synopsis-info > div:nth-child(1) > h2').text().trim(); 
+        movie.technicalDetails.originalLanguage = $('#synopsis-details > div.ovw-synopsis-info > div.more-hidden > div:nth-child(6) > span.that').text().trim();  
+
+       // movie.technicalDetails.durationaverage = $('div.meta-body-item > a').text;
+        
+        movie.about.sinposis = $('#synopsis-details > div.synopsis-txt > p').text().trim();
+        movie.cast.directors.push($('#content-start > div > div > div.card.card-entity.card-movie-overview.row.row-col-padded-10.cf > div > div.meta-body > div:nth-child(2) > span:nth-child(2) > a > span').text()); 
+        
+        var genres = $('#content-start > div > div > div.card.card-entity.card-movie-overview.row.row-col-padded-10.cf > div > div.meta-body > div:nth-child(4)').text().split('\n');
+        for(i=2; i < genres.length-1; i = 1+i){
+            movie.about.genre.push(genres[i].trim().replace(',', '') );
+        }
+        
+      
+            
+        
+        
+//        console.log( $('#content-start > div > div > div.card.card-entity.card-movie-overview.row.row-col-padded-10.cf > div > div.meta-body > div:nth-child(4)').text().split(' ').
+        
+            
+    /*
+        serie.about.sinposis = $('#col_main > div.margin_30t.margin_20b > p:nth-child(3)').text().trim();  
+        serie.about.rating = $('#contentlayout > div.posterLarge > div > div > div > table > tbody > tr:nth-child(7) > td > span > span.note').text().trim();
+   
+        var genres = [];
+        $('#contentlayout > div.posterLarge > div > div > div > table > tbody > tr:nth-child(4) > td span').each(function (i,j) {
+            genres.push($(j).text().trim());
+        });
+    
+        serie.about.genre = genres.filter(function(elem, pos) {
+                return genres.indexOf(elem) == pos;
+        });
+    */
+    
+      //  await findSeasonsInfo(site, cSerie);
+        
+      //  await findImages(site, cSerie);
+
+      
+          //  console.log(serie.technicalDetails);      
+        
+    }catch(err){
+        console.log("Dados da Serie indisponivel");
+    }
+    
+        
 }
 
