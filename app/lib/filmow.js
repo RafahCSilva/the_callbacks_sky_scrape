@@ -14,7 +14,7 @@ async function process (query) {
   try {
     resp = await rp.get({ url: searchLink, qs: propertiesObject })
   } catch (e) {
-    console.log('erro')
+    console.log(e)
     return []
   }
   let $ = cheerio.load(resp)
@@ -88,7 +88,7 @@ async function getComments(link){
       .split("\n")
       .filter(item => item != '')
   } catch (e) {
-    console.log('failed on commnets')
+    console.log(e)
     return []
   }
 
@@ -101,7 +101,7 @@ async function getStars(link) {
     $ = cheerio.load(resp)
     return $('.average').html()
   } catch (e) {
-    console.log('failed on stars')
+    console.log(e)
     return []
   }
 
