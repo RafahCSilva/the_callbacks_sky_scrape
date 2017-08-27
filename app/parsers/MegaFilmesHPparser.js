@@ -26,6 +26,7 @@ const parseMedia = async function (urls, query) {
                 obj = movie;
             }
             
+            obj.about.genre = genres;
             obj.technicalDetails.movieName = $m('.t_arc').text().split(' – ')[0];
             obj.technicalDetails.parentalRating = $m('.ic-idade').text();
             
