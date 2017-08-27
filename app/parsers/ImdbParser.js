@@ -93,16 +93,14 @@ var scrapePage = function (url, query) {
                                     movie.cast.distributors.push($(elm).text().replace(/\s+/g, ' ').trim());
                                 });
                                 
-                                console.log(movie);
+                                return {
+                                    title: query,
+                                    source: 'IMDB',
+                                    result : movie
+                                }
                             }
                         });
                     }
-                    
-                    // return {
-                    //     title: query,
-                    //     source: 'IMDB',
-                    //     result : movie
-                    // }
                 });
             }
             
