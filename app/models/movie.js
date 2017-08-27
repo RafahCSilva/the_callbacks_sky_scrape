@@ -15,7 +15,7 @@ module.exports = {
         producers: []
     },
     about: {
-        sinposis: "",
+        sinopsis: "",
         keywords: [],
         genre: [],
         theme: []
