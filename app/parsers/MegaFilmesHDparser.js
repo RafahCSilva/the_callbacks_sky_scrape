@@ -14,15 +14,27 @@ const parseMedia = async function (urls, query) {
             let movieHtml = await rp.get(urls[url]);
             let $m = cheerio.load(movieHtml);
             
-            movie.technicalDetails.parentalRating = $m('.ic-idade').text();
-            movie.technicalDetails.movieName = $m('.t_arc').text().split(/\s\(\d{4}/)[0];
+            let genres = [];
+            $m('.si-itens li a').each(function (i, elm) {
+                genres.push($m(elm).text());
+            });
+            
+            let obj;
+            if (genres.indexOf('Séries') >= 0) {
+                obj = serie;
+            } else {
+                obj = movie;
+            }
+            
+            obj.technicalDetails.movieName = $m('.t_arc').text().split(' – ')[0];
+            obj.technicalDetails.parentalRating = $m('.ic-idade').text();
             
             let committer = new Committer();
             
             let payload = {
                 title: query,
                 source: 'Mega Filmes HD',
-                result : movie
+                result : obj
             };
             
             payloads.push(payload);
@@ -32,7 +44,7 @@ const parseMedia = async function (urls, query) {
         
         return payloads;
     } catch (err) {
-        console.error('Can\'t parse movie.', err);
+        console.error('Can\'t parse object.', err);
     }
 }
 
