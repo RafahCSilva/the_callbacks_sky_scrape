@@ -1,4 +1,5 @@
 module.exports = {
+    _type: 'movie',
     technicalDetails: {
         movieName: "",
         releaseYear: "",

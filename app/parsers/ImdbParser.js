@@ -1,30 +1,32 @@
 const request = require('request');
 const rp = require('request-promise');
 const cheerio = require('cheerio');
-const movie = require('./../models/movie');
-const serie = require('./../models/serie');
+let movie = require('./../models/movie');
+let serie = require('./../models/serie');
 const Committer = require('./../lib/committer');
+const yt = require('./youtubeParser');
+var obj;
 
 module.exports.scrape = async function (title) {
   try {
     let html = await rp.get('http://www.imdb.com/find?q=' + title.toLowerCase().trim().replace(/ +/g, '+'))
     if (html) {
       const $list = cheerio.load(html);
-  
+
       let movieUrls = [];
       $list('#main > div > div:nth-child(3) > table > tbody > tr.findResult').each(function (i, elm) {
         movieUrls.push('http://www.imdb.com' + $list(elm).find('.result_text a').attr('href').split('/?ref')[0]);
       });
-      
+
       let scrapeds = [];
       movieUrls.forEach(function (elm, i) {
         scrapeds.push(scrapePage(elm, title).then(function (result) {
           return result;
         }));
       });
-      
+
       let result = Promise.all(scrapeds);
-      
+
       return result;
     } else {
       console.log('Not HTML')
@@ -37,23 +39,25 @@ module.exports.scrape = async function (title) {
 async function findSeasonInfo(seasonUrl) {
   try {
     let html = await rp.get(seasonUrl);
-    
+
     if (html) {
       const $ssn = cheerio.load(html);
       let season = {};
       season.number = Number($ssn('#bySeason').val());
       season.year = $ssn('#byYear option').eq(Number(season.number)).val();
       season.totalEpisodes = $ssn('#episodes_content > div.clear > div.list.detail.eplist > div').length;
-      
+
       season.media = {};
       season.media.poster = $ssn('#main > div.article.listo.list > div.subpage_title_block > a > img').attr('src');
-      // season.media.trailers = //get from youtube
-      // season.media.promoVideos = //get from youtube
+
+      season.media.trailers = await yt(obj.technicalDetails.movieName + ' + ' + season.number + ' temporada + trailer');
+      season.media.promoVideos = await yt(obj.technicalDetails.movieName + ' + ' + season.number + ' temporada + promo');
+
       season.media.screenshots = [];
       $ssn('#episodes_content > div.clear > div.list.detail.eplist > div .image img').each(function (i, elm) {
         season.media.screenshots.push($ssn(elm).attr('src'));
       });
-      
+
       season.episodes = [];
       $ssn('#episodes_content > div.clear > div.list.detail.eplist > div').each(function (i, elm) {
         season.episodes.push({
@@ -65,7 +69,7 @@ async function findSeasonInfo(seasonUrl) {
           screenshots: []
         });
       });
-      
+
       return season;
     } else {
       console.log('No HTML found');
@@ -78,37 +82,37 @@ async function findSeasonInfo(seasonUrl) {
 async function getSeasons(seasonUrls) {
   let seasonPromises = [];
   seasonUrls.forEach(function (sUrl) {
-    seasonPromises.push(findSeasonInfo(sUrl).then(function(result) { 
-        return result;
+    seasonPromises.push(findSeasonInfo(sUrl).then(function (result) {
+      return result;
     }));
   });
-  
-  let seasons = Promise.all(seasonPromises);
-  
+
+  let seasons = await Promise.all(seasonPromises);
+
   return seasons;
 }
 
-async function scrapePage (url, query) {
+async function scrapePage(url, query) {
   let html
   try {
     html = await rp.get(url)
   } catch (e) {
     return
   }
-  
+
 
   const $ = cheerio.load(html);
 
   let mediaType = $('#title-overview-widget > div.vital > div.title_block > div > div.titleBar > div.title_wrapper > div > a:nth-child(9)');
-  let obj = (mediaType.text().indexOf('TV Series') >= 0) ? serie : movie;
-  
+  obj = (mediaType.text().indexOf('TV Series') >= 0) ? serie : movie;
+
   //get soundtrack
   let soundtrackUrl = url + '/soundtrack';
   let soundHtml
 
   try {
     soundHtml = await rp.get(soundtrackUrl)
-  } catch(e) {
+  } catch (e) {
     return
   }
 
@@ -117,8 +121,8 @@ async function scrapePage (url, query) {
     let name = $2(elm).text().split('\n')[0];
     let writer = $2(elm).text().split('\n')[1].replace('Written by ', '');
     obj.technicalDetails.soundtrack.push({
-      name: name.substr(0, name.length-1),
-      writer: writer.substr(0, writer.length-1)
+      name: name.substr(0, name.length - 1),
+      writer: writer.substr(0, writer.length - 1)
     });
   });
 
@@ -140,7 +144,7 @@ async function scrapePage (url, query) {
     }
   });
 
-  $('#titleDetails > div:nth-child(17)').find('a span').each(function (i,j) {
+  $('#titleDetails > div:nth-child(17)').find('a span').each(function (i, j) {
     obj.technicalDetails.producers.push($(j).text());
   });
 
@@ -150,24 +154,28 @@ async function scrapePage (url, query) {
 
   if (mediaType.text().indexOf('TV Series') >= 0) {
     obj.technicalDetails.releaseYear = $(mediaType).text().match(/\d{4}/)[0];
-    
+
     let seasonUrls = [];
     $('#title-episode-widget > div.seasons-and-year-nav > div:nth-child(4) a').each(function (i, elm) {
       seasonUrls.push('http://www.imdb.com' + $(elm).attr('href').split('&ref')[0]);
     });
-    
+
     obj.seasons = await getSeasons(seasonUrls);
   } else { //for movies
     obj.technicalDetails.releaseYear = $('#titleYear > a').text();
-    
+
+    obj.cast = {};
+    obj.cast.directors = [];
+    // console.log(obj);
     $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(2) > span a > span').each(function (i, elm) {
-      obj.cast.directors = $(elm).text();
+      obj.cast.directors.push($(elm).text());
     });
 
+    obj.cast.creators = [];
     $('#title-overview-widget > div.plot_summary_wrapper > div.plot_summary > div:nth-child(3) > span').find('a > span').each(function (i, elm) {
       obj.cast.creators.push($(elm).text());
     });
-    
+
     let distributorsHtml;
     try {
       distributorsHtml = await rp.get(url + '/companycredits')
@@ -190,7 +198,7 @@ async function scrapePage (url, query) {
   let payload = {
     title: query,
     source: 'IMDB',
-    result : movie
+    result: movie
   }
 
   committer.post(payload);
