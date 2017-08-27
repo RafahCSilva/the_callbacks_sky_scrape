@@ -2,7 +2,7 @@ const request = require('request')
 var rp = require('request-promise')
 const cheerio = require('cheerio')
 const async = require('async')
-const Committer = require('./committer')
+const Committer = require('../lib/committer')
 const _ = require('lodash')
 
 var DB_URL = 'http://thecallbacks.ddns.net:8080/hack/data/hack/data/'

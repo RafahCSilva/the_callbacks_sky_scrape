@@ -5,14 +5,13 @@ const rp = require('request-promise');
 serie = require('./../models/serie.js');
 movie = require('./../models/movie.js'); 
 site = 'http://www.adorocinema.com';
+const Committer = require('../lib/committer')
 
 cSerie = ''; 
 flag = true;
 
 
-async function screape(name ){
-    name = "Game of Thrones"; 
-    
+async function screape(name){    
     s = ""; 
     pesquisa = site + "/busca/?q="+ name.replace(' ', '+');
     try{ 
@@ -38,21 +37,26 @@ async function screape(name ){
         
     }
     
-    
+    let committer = new Committer()
    
-    if(flag){   
+    if(flag){
+        committer.post({
+            title: name,
+            source: 'adorocinema',
+            result: serie
+        })   
         return serie;
     }else{
+        committer.post({
+            title: name,
+            source: 'adorocinema',
+            result: movie
+        }) 
         return movie;
     }
 }
 
-(async function (name) {
-    let newSerie = await screape(name);
-    console.log(newSerie)
-})();
-
-
+module.exports = screape
 
 async function start(s){
     cSerie = s; 
