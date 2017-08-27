@@ -21,6 +21,17 @@ var sendJsonResponse = function(res, status, content) {
   res.json(content);
 };
 
+let queue = []
+
+setInterval(function () {
+  let title = queue.shift()
+  if(title != null) {
+    console.log('Processando ' + title)
+    filmow(title)
+    imdbParser.scrape(title)
+  }
+}, 500)
+
 app.post('/processOne',  async (req, res, next) => {
   if(req.body == null || req.body._source == null) {
     sendJsonResponse(res , 400, {error: 'Body not found'})
@@ -31,8 +42,9 @@ app.post('/processOne',  async (req, res, next) => {
   let title = req.body._source.programTitle
   let releaseDate = req.body._source.releaseYear
 
-  filmow(title).then();
-  imdbParser.scrape(title);
+  queue.push(title)
+  //filmow(title).then();
+  //imdbParser.scrape(title);
   
   res.json({test: 'felipe'});
 });
